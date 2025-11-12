@@ -1,1 +1,1 @@
-This repo is set up so that each top level directory can be stowed, so long as this repo's root directory is placed directly in /home/flinty
+This repo is set up so that each top level directory can be stowed with [GNU stow](https://www.gnu.org/software/stow/), so long as this repo's root directory is placed directly in your home directory.
