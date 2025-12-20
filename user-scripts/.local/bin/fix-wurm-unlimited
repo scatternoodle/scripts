@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# Author: Elliot "Scatternoodle" Shirra
+# This script fixes the default Steam native Linux installation of Wurm Unlimited.
+# 
+
+set -e
+
+# Config variables - update according to your local installation if different
+path_gamedat="$HOME/.local/share/Steam/steamapps/common/Wurm Unlimited"
+path_clientdat="$path_gamedat/WurmLauncher"
+path_serverdat="$path_gamedat/WurmServerLauncher"
+
+filename_lib="libsteam_api.so"
+
+echo "Fixing native Linux Wurm Unlimited client and server launcher installs..."
+echo "Fixing client libary path"
+cp "$path_clientdat/$filename_lib" "$path_clientdat/nativelibs/$filename_lib"
+echo "Fixing server libary path"
+cp "$path_serverdat/$filename_lib" "$path_serverdat/nativelibs/$filename_lib"
+echo "Finished, you can launch Wurm Unlimited now"
