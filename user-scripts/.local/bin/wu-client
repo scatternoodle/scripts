@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+# Author: Elliot "Scatternoodle" Shirra
+# This script fixes the default Steam native Linux installation of Wurm Unlimited.
+# For many users, the launcher crashes on startup due to a missing dependency.
+# For more information about this issue, see https://forum.wurmonline.com/index.php?/topic/204526-client-crashunder-linux-after-update-at-steam-cient/
+
+set -euo pipefail
+
+# REQUIRES CONFIGURATION
+# Please review and update according to your local installation. This tends to
+# differ quite a bit between linux distributions.
+# E.g. on debian-based systems the game data path may be something like:
+#     "$HOME/.steam/debian-installation/steamapps/common/Wurm Unlimited"
+#     
+PATH_STEAMDATA="$HOME/.local/share/Steam"
+
+path_wurm="$PATH_STEAMDATA/steamapps/common/Wurm Unlimited"
+path_client="$path_wurm/WurmLauncher"
+path_server_non_dedicated="$path_wurm/WurmServerLauncher"
+
+FILENAME_LIB="libsteam_api.so"
+
+echo "Validating installation..."
+echo "Ensuring library dependencies"
+if [[ ! -f "$path_client/nativelibs/$FILENAME_LIB" ]]; then
+      echo "Fixing native Linux Wurm Unlimited client and server launcher installs..."
+      echo "Fixing client libary path"
+      cp "$path_client/$FILENAME_LIB" "$path_client/nativelibs/$FILENAME_LIB"
+      echo "Fixing server libary path"
+      cp "$path_server_non_dedicated/$FILENAME_LIB" "$path_server_non_dedicated/nativelibs/$FILENAME_LIB"
+fi
+
+echo "Ensuring 'steam_appid.txt' for multiclient support"
+file_appid="$path_client/steam_appid.txt"
+appid_override='402370'
+if ! [[ -f "$file_appid" && "$(tr -d '\r\n' <"$file_appid")" == "$appid_override" ]]; then
+      echo "steam_appid.txt missing or contains incorrect contents. Repairing" 
+      echo "$appid_override" > "$file_appid"
+fi
+
+echo "Launching WurmLauncher client"
+cd "$path_client"
+
+# Sidestep any nasty java/jvx local conflicts by using exactly the same environment
+# that steam does, which we assume works.
+# NOTE - I'm not sure how flaky this is over time, and across different distros.
+# If this is not working for you, you can try the following:
+#
+# 1 - Launch the client from Steam frontend, and grab the steam env into a file with
+#     tr '\0' '\n' < /proc/$(pgrep -n -f WurmLauncher)/environ | sort > /tmp/env.steam.txt
+# Check that file for LD_LIBRARY_PATH in particular, and any other bits that might
+# jump out at you - you may want to diff against your shell env.
+#
+# 2 - Remove the LD_LIBRARY_PATH variable assignment before the WumLauncher execution.
+# For many users, especially those on X11 rather than Wayland, this may be just
+# fine if you have the right dependencies installed locally.
+LD_LIBRARY_PATH="$PATH_STEAMDATA/steamapps/common/SteamLinuxRuntime/var/steam-runtime/pinned_libs_32:$PATH_STEAMDATA/steamapps/common/SteamLinuxRuntime/var/steam-runtime/pinned_libs_64:/usr/lib/pressure-vessel/overrides/lib/x86_64-linux-gnu/aliases:/usr/lib/pressure-vessel/overrides/lib/i386-linux-gnu/aliases:/usr/lib/pressure-vessel/overrides/lib/x86_64-linux-gnu:/usr/lib/pressure-vessel/overrides/lib/i386-linux-gnu:/lib/i386-linux-gnu:/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib:/usr/lib64:$PATH_STEAMDATA/steamapps/common/SteamLinuxRuntime/var/steam-runtime/lib/i386-linux-gnu:$PATH_STEAMDATA/steamapps/common/SteamLinuxRuntime/var/steam-runtime/usr/lib/i386-linux-gnu:$PATH_STEAMDATA/steamapps/common/SteamLinuxRuntime/var/steam-runtime/lib/x86_64-linux-gnu:$PATH_STEAMDATA/steamapps/common/SteamLinuxRuntime/var/steam-runtime/usr/lib/x86_64-linux-gnu:$PATH_STEAMDATA/steamapps/common/SteamLinuxRuntime/var/steam-runtime/lib:$PATH_STEAMDATA/steamapps/common/SteamLinuxRuntime/var/steam-runtime/usr/lib:$PATH_STEAMDATA/steamapps/common/Wurm Unlimited" \
+      ./WurmLauncher
