@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=Wurm Unlimited - Client
+Exec=bash -lc 'wu-client > /tmp/wu-client.log 2>&1'
+Type=Application
+Terminal=false

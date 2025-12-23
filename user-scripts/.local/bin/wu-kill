@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Kill all user-owned WurmLauncher processes, because they don't properly terminate
+# when user quits the GUI.
+pkill -u "$USER" -x WurmLauncher || true
